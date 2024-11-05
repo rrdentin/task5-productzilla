@@ -1,32 +1,36 @@
 # Base stage
-FROM node:18-alpine as base
-
+FROM node:lts-buster AS base
 WORKDIR /usr/src/app
 
 # Development stage
-FROM base as development
+FROM base AS development
 ENV NODE_ENV=development
 
-# Copy package.json and package-lock.json first to take advantage of caching
+# Install dependencies
 COPY package*.json ./
 RUN npm install
 
-# Copy source code
+# Copy the source code
 COPY . .
 
-# Command for development with nodemon
+# Command for development
 CMD ["npm", "run", "dev"]
 
 # Production stage
-FROM base as production
+FROM base AS production
 ENV NODE_ENV=production
 
-# Copy only the package.json and package-lock.json for production
+# Install only production dependencies
 COPY package*.json ./
 RUN npm ci --only=production
 
-# Copy source code (exclude dev dependencies)
+# Copy the source code
 COPY . .
 
 # Command to start the application
 CMD ["npm", "start"]
+
+# Test stage
+FROM development AS test
+# Run tests
+CMD ["npm", "run", "test"]
